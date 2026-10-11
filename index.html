@@ -73,8 +73,35 @@ button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}button
 <div class="selection"><h2>3. Your selected segments <span id="selectedCount" class="count">0</span></h2><div id="selectionList" class="empty">Nothing selected yet.</div>
 <div class="toolbar"><button id="downloadCsv" disabled>Download selection CSV</button><button id="clearSelection" disabled>Clear selections</button></div><button id="checkoutBtn" class="primary checkout-btn" disabled>Check Out / Register</button>
 <div id="pendingBanner" class="pending-banner"></div>
-<div class="small">Prototype: selection/export works now. A registration form or database can be connected after the browsing layout is finalized.</div></div>
+<div class="small">Select one or more route segments, then use Check Out / Register to submit your participation request.</div></div>
 </aside><div id="map"></div></main>
+<div id="checkoutBackdrop" class="modal-backdrop" aria-hidden="true">
+  <div class="checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkoutTitle">
+    <h2 id="checkoutTitle">Canadian Pursuit Registration</h2>
+    <div class="small">Review your selected segments and tell us how you plan to participate.</div>
+    <h3>Your selected segments</h3>
+    <div id="checkoutSummary" class="checkout-summary"></div>
+    <h3>Your information</h3>
+    <form id="registrationForm">
+      <div class="form-grid">
+        <label>First name *<input id="regFirst" required autocomplete="given-name"></label>
+        <label>Last name *<input id="regLast" required autocomplete="family-name"></label>
+        <label>City of residence *<input id="regCity" required autocomplete="address-level2"></label>
+        <label>Email address *<input id="regEmail" type="email" required autocomplete="email"></label>
+        <div class="full">
+          <div class="small" style="margin-bottom:6px">How will you participate? *</div>
+          <div class="participation">
+            <label><input type="radio" name="participation" value="On location" required><span><strong>On location</strong><br><span class="small">I intend to complete the selected segment(s) on the actual Canadian Pursuit route.</span></span></label>
+            <label><input type="radio" name="participation" value="Virtual" required><span><strong>Virtually</strong><br><span class="small">I will complete the selected distance in my own location.</span></span></label>
+          </div>
+        </div>
+        <label class="full">Comments or message (optional)<textarea id="regComments" placeholder="Anything you would like the Canadian Pursuit team to know"></textarea></label>
+      </div>
+      <div class="notice">Submitting sends your registration request to Canadian Pursuit. Your selected segment(s) will be marked Tentative while the request is reviewed.</div>
+      <div class="modal-actions"><button type="button" id="cancelCheckout">Cancel</button><button type="submit" class="primary">Submit registration request</button></div>
+    </form>
+  </div>
+</div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="data/overview.js"></script>
 <script>
 const map=L.map('map',{preferCanvas:true}).setView([55,-96],4);
@@ -181,45 +208,26 @@ window.parent.postMessage({type:'CP_GET_SEGMENT_STATUSES'},'*');
 
 renderSelection();
 
-function initialiseOverview(){
+// Use the same control path that is known to work when the visitor presses
+// Canada Overview.  Waiting for both Leaflet and the page layout prevents
+// the initial route layer from being lost during first render.
+function showInitialCanadaOverview(){
   map.invalidateSize(true);
-  drawOverview();
+  const overviewButton=document.getElementById('overviewBtn');
+  if(overviewButton){
+    overviewButton.click();
+  }else{
+    drawOverview();
+  }
 }
 
-// Draw once immediately, then again after the page and map container have settled.
-// This avoids a blank overview route on first load in GitHub Pages / embedded pages.
-initialiseOverview();
-requestAnimationFrame(initialiseOverview);
+map.whenReady(()=>{
+  requestAnimationFrame(showInitialCanadaOverview);
+});
+
 window.addEventListener('load',()=>{
-  setTimeout(initialiseOverview,300);
-  setTimeout(initialiseOverview,1000);
+  setTimeout(showInitialCanadaOverview,250);
+  setTimeout(showInitialCanadaOverview,1000);
 });
 </script>
-<div id="checkoutBackdrop" class="modal-backdrop" aria-hidden="true">
-  <div class="checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkoutTitle">
-    <h2 id="checkoutTitle">Canadian Pursuit Registration</h2>
-    <div class="small">Review your selected segments and tell us how you plan to participate.</div>
-    <h3>Your selected segments</h3>
-    <div id="checkoutSummary" class="checkout-summary"></div>
-    <h3>Your information</h3>
-    <form id="registrationForm">
-      <div class="form-grid">
-        <label>First name *<input id="regFirst" required autocomplete="given-name"></label>
-        <label>Last name *<input id="regLast" required autocomplete="family-name"></label>
-        <label>City of residence *<input id="regCity" required autocomplete="address-level2"></label>
-        <label>Email address *<input id="regEmail" type="email" required autocomplete="email"></label>
-        <div class="full">
-          <div class="small" style="margin-bottom:6px">How will you participate? *</div>
-          <div class="participation">
-            <label><input type="radio" name="participation" value="On location" required><span><strong>On location</strong><br><span class="small">I intend to complete the selected segment(s) on the actual Canadian Pursuit route.</span></span></label>
-            <label><input type="radio" name="participation" value="Virtual" required><span><strong>Virtually</strong><br><span class="small">I will complete the selected distance in my own location.</span></span></label>
-          </div>
-        </div>
-        <label class="full">Comments or message (optional)<textarea id="regComments" placeholder="Anything you would like the Canadian Pursuit team to know"></textarea></label>
-      </div>
-      <div class="notice">Submitting sends your registration request to Canadian Pursuit. Your selected segment(s) will be marked Tentative while the request is reviewed.</div>
-      <div class="modal-actions"><button type="button" id="cancelCheckout">Cancel</button><button type="submit" class="primary">Submit registration request</button></div>
-    </form>
-  </div>
-</div>
 </body></html>

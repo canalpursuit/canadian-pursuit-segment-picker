@@ -1,0 +1,9 @@
+Canadian Pursuit Segment Picker v8.4
+
+Root-cause correction:
+The checkout/modal HTML was below the main JavaScript. The script attempted to
+attach event handlers to cancelCheckout and checkoutBackdrop before those
+elements existed, causing execution to stop before the automatic Canada route
+startup code ran.
+
+The complete checkout modal is now defined before the main JavaScript executes.

@@ -1,0 +1,3 @@
+Canadian Pursuit Segment Picker v8.2
+- Initial Canada overview now triggers the exact same control path as the working Canada Overview button, after Leaflet/page initialization.
+- Removed obsolete prototype notice.

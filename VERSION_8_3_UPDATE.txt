@@ -1,0 +1,6 @@
+Canadian Pursuit Segment Picker v8.3
+ROOT-CAUSE FIX:
+The registration form is defined below the main JavaScript block. Version 8 tried
+to attach its submit listener before that form existed, causing JavaScript to stop
+before the automatic Canada overview startup code ran. The registration listener
+now waits for DOMContentLoaded. The overview can therefore draw automatically.
