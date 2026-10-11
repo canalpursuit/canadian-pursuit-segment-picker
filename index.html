@@ -204,7 +204,8 @@ window.addEventListener('message',event=>{
  if(m.type==='CP_REGISTRATION_ERROR'){const b=registrationForm.querySelector('button[type="submit"]');b.disabled=false;b.textContent='Submit registration request';alert(m.message||'Registration could not be completed.');}
  if(m.type==='CP_SEGMENT_STATUSES'){const s=m.statuses||{};Object.values(REGIONS).forEach(r=>{if(r&&Array.isArray(r.segments))r.segments.forEach(x=>{if(s[x.id])x.status=s[x.id];});});drawOverview();if(currentRegion)openRegion(currentRegion);}
 });
-window.parent.postMessage({type:'CP_GET_SEGMENT_STATUSES'},'*');
+// Tell Wix that the hosted picker has finished loading and is ready to receive data.
+window.parent.postMessage({type:'CP_PICKER_READY'},'*');
 
 renderSelection();
 
