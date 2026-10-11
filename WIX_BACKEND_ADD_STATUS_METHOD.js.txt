@@ -1,0 +1,8 @@
+// Add this export below submitSegmentRegistration in segmentRegistration.web.js
+export const getSegmentStatuses = webMethod(Permissions.Anyone, async () => {
+ const statuses={};
+ let r=await wixData.query("Import1").limit(1000).find({suppressAuth:true,consistentRead:true});
+ r.items.forEach(x=>{if(x.segmentId)statuses[x.segmentId]=x.status||"Available";});
+ while(r.hasNext()){r=await r.next();r.items.forEach(x=>{if(x.segmentId)statuses[x.segmentId]=x.status||"Available";});}
+ return statuses;
+});

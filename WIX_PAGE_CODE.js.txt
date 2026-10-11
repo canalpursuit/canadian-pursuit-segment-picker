@@ -1,0 +1,8 @@
+import { submitSegmentRegistration, getSegmentStatuses } from 'backend/segmentRegistration.web';
+$w.onReady(function () {
+ $w("#html1").onMessage(async (event) => {
+  const m=event.data;if(!m||!m.type)return;
+  if(m.type==="CP_REGISTRATION"){try{const r=await submitSegmentRegistration({firstName:m.firstName,lastName:m.lastName,city:m.city,email:m.email,participation:m.participation,comments:m.comments||"",segmentIds:m.segmentIds});$w("#html1").postMessage({type:"CP_REGISTRATION_SUCCESS",registrationId:r.registrationId,status:r.status});}catch(e){console.error(e);$w("#html1").postMessage({type:"CP_REGISTRATION_ERROR",message:e.message||"Registration could not be completed."});}}
+  if(m.type==="CP_GET_SEGMENT_STATUSES"){try{$w("#html1").postMessage({type:"CP_SEGMENT_STATUSES",statuses:await getSegmentStatuses()});}catch(e){console.error(e);}}
+ });
+});

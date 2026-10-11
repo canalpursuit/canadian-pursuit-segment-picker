@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Canadian Pursuit — Choose a Segment</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--red:#c62828;--blue:#174a7e;--ink:#17202a;--muted:#667085;--line:#d0d5dd;--bg:#f6f8fb;--panel:#fff;--selected:#1f7a4d}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:var(--bg)}
+header{padding:14px 18px;background:var(--blue);color:#fff;display:flex;gap:16px;align-items:center;justify-content:space-between}
+header h1{font-size:22px;margin:0}.sub{font-size:13px;opacity:.9}
+.brand{display:flex;align-items:center;gap:11px}.brand-mark{width:46px;height:46px;border:2px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px}
+.brand-right{display:flex;align-items:center;gap:14px}.logo-strip{display:flex;align-items:center;gap:6px;font-size:10px;opacity:.95}.logo-slot{background:#fff;color:#174a7e;border-radius:4px;padding:7px 8px;font-weight:700}
+.status-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin:7px 0 10px}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}.dot.available{background:#c62828}.dot.together{background:#1f7a4d}.dot.route-red{background:#c62828}.dot.tentative-yellow{background:#f4c430}.dot.confirmed-green{background:#1f7a4d}
+.endpoint-icon{background:#fff;border:2px solid #111;border-radius:50%;width:24px!important;height:24px!important;line-height:20px;text-align:center;font-size:10px;font-weight:800}
+.territory-icon{background:#fff;border:3px solid #c62828;border-radius:18px;padding:3px 7px;font-size:11px;font-weight:800;color:#17202a;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.status-pill{display:inline-block;border-radius:12px;padding:2px 7px;font-size:11px;font-weight:700;margin-top:4px}.status-pill.available{background:#e7eef6;color:#174a7e}.status-pill.together{background:#dff2e7;color:#1f7a4d}
+main{display:grid;grid-template-columns:370px 1fr;height:calc(100vh - 68px)}
+aside{background:#fff;border-right:1px solid var(--line);overflow:auto;padding:14px}#map{height:100%;min-height:600px}
+h2{font-size:16px;margin:12px 0 8px}.small{font-size:12px;color:var(--muted)}
+.region-grid{display:grid;gap:7px}.region{border:1px solid var(--line);border-radius:9px;padding:9px 10px;background:#fff;cursor:pointer;text-align:left}
+.region:hover,.region.active{border-color:var(--blue);background:#eef5fb}.region strong{display:block}.region span{font-size:12px;color:var(--muted)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}label{font-size:12px;color:var(--muted)}
+select,input{width:100%;padding:7px;border:1px solid var(--line);border-radius:7px;background:#fff}
+button{border:1px solid var(--line);background:#fff;border-radius:7px;padding:7px 9px;cursor:pointer}
+button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}button.selected{background:var(--selected);color:#fff;border-color:var(--selected)}
+.toolbar{display:flex;gap:7px;flex-wrap:wrap;margin:9px 0}.segment-list{display:flex;flex-direction:column;gap:7px}
+.segment{border:1px solid var(--line);border-radius:9px;padding:9px;background:#fff}.segment-title{font-weight:700;font-size:13px}
+.segment-meta{font-size:12px;color:var(--muted);margin-top:3px}.segment-actions{display:flex;gap:6px;margin-top:7px}
+.selection{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}.selection-row{font-size:12px;padding:5px 0;border-bottom:1px solid #eee}
+.count{display:inline-block;background:#e7eef6;color:#17202a;border-radius:12px;padding:2px 8px;font-size:12px}
+.empty{padding:12px;border:1px dashed var(--line);border-radius:8px;color:var(--muted);font-size:13px}
+.leaflet-popup-content{min-width:235px}.popup-title{font-weight:700;margin-bottom:4px}.popup-meta{font-size:12px;color:#555;margin-bottom:8px}
+@media(max-width:850px){main{grid-template-columns:1fr;height:auto}aside{border-right:0;border-bottom:1px solid var(--line)}#map{height:65vh;min-height:480px}}
+.cp-logo{width:155px;height:76px;object-fit:contain;background:#fff;border-radius:7px;padding:3px}.brand{display:flex;align-items:center;gap:14px;min-width:0}.brand-copy{min-width:175px}.page-title{font-size:20px;font-weight:700;line-height:1.1}.brand-right{display:flex;align-items:center;gap:14px;margin-left:auto}.supporters{display:flex;flex-direction:column;align-items:flex-end;gap:4px}.supporters-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;opacity:.8}.logo-strip{display:flex;align-items:center;gap:6px}.sponsor-card{width:100px;height:46px;background:#fff;border-radius:5px;padding:4px;display:flex;align-items:center;justify-content:center}.sponsor-card.wide{width:145px}.sponsor-card.round{width:52px}.sponsor-card img{max-width:100%;max-height:100%;object-fit:contain}@media(max-width:1180px){header{align-items:flex-start}.brand-right{flex-direction:column;align-items:flex-end}.sponsor-card{width:82px;height:40px}.sponsor-card.wide{width:118px}.sponsor-card.round{width:45px}}
+.checkout-btn{width:100%;margin-top:8px;font-weight:700}
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;align-items:center;justify-content:center;padding:18px}
+.modal-backdrop.open{display:flex}.checkout-modal{background:#fff;width:min(720px,96vw);max-height:92vh;overflow:auto;border-radius:12px;box-shadow:0 16px 50px rgba(0,0,0,.3);padding:20px}
+.checkout-modal h2{font-size:22px;margin:0 0 6px}.checkout-modal h3{font-size:15px;margin:18px 0 8px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.form-grid .full{grid-column:1/-1}
+.checkout-modal input,.checkout-modal textarea{width:100%;padding:9px;border:1px solid var(--line);border-radius:7px;font:inherit}.checkout-modal textarea{min-height:90px;resize:vertical}
+.participation{display:grid;grid-template-columns:1fr 1fr;gap:9px}.participation label{border:1px solid var(--line);border-radius:9px;padding:10px;display:flex;gap:8px;align-items:flex-start;color:var(--ink);cursor:pointer}.participation input{width:auto;margin-top:2px}
+.checkout-summary{background:#f6f8fb;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:12px}.checkout-seg{padding:5px 0;border-bottom:1px solid #ddd}.checkout-seg:last-child{border-bottom:0}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.notice{font-size:12px;color:var(--muted);margin-top:8px}
+.pending-banner{display:none;background:#fff3cd;border:1px solid #ffe69c;color:#664d03;border-radius:8px;padding:10px;margin-top:10px;font-size:12px}.pending-banner.show{display:block}
+.status-pill.pending{background:#fff3cd;color:#8a5a00}
+@media(max-width:650px){.form-grid,.participation{grid-template-columns:1fr}.form-grid .full{grid-column:auto}}
+</style></head>
+<body>
+<header>
+<div class="brand"><img class="cp-logo" src="assets/canadian-pursuit.png" alt="Canadian Pursuit"><div class="brand-copy"><div class="page-title">Choose a Run / Walk Segment</div><div class="sub">Canadian Pursuit • Canada 2027</div></div></div>
+<div class="brand-right"><div class="supporters"><div class="supporters-label">Sponsors &amp; Partners</div><div class="logo-strip">
+<div class="sponsor-card"><img src="assets/parke.jpg" alt="Parke Massage Therapy"></div>
+<div class="sponsor-card"><img src="assets/rural-roots.jpg" alt="Rural Roots Brewing Company"></div>
+<div class="sponsor-card wide"><img src="assets/mobility-tape.jpg" alt="Mobility Tape"></div>
+<div class="sponsor-card round"><img src="assets/price-health.png" alt="Price Health"></div>
+</div></div><div id="selectedHeader" class="count">0 selected</div></div></header>
+<main><aside>
+<div class="toolbar"><button id="overviewBtn" class="primary">Canada overview</button><button id="fitBtn">Fit current map</button></div>
+<h2>1. Choose a province / territory</h2>
+    <div class="status-legend">
+<span><i class="dot route-red"></i>Available route</span>
+<span><i class="dot tentative-yellow"></i>Tentatively taken</span>
+<span><i class="dot confirmed-green"></i>Confirmed</span>
+</div>
+    <div id="regions" class="region-grid"></div>
+<div id="regionPanel" style="display:none">
+<h2>2. Find a segment</h2><div id="regionHeading" class="small"></div>
+<div class="controls"><label>Day<select id="dayFilter"><option value="">All days</option></select></label><label>Max distance (km)<input id="maxKm" type="number" min="1" step="1" placeholder="Any"></label></div>
+<label>Search label / notes<input id="textFilter" type="text" placeholder="e.g. Section 4, intersection"></label>
+<div class="toolbar"><button id="clearFilters">Clear filters</button></div><div id="segmentList" class="segment-list"></div>
+</div>
+<div class="selection"><h2>3. Your selected segments <span id="selectedCount" class="count">0</span></h2><div id="selectionList" class="empty">Nothing selected yet.</div>
+<div class="toolbar"><button id="downloadCsv" disabled>Download selection CSV</button><button id="clearSelection" disabled>Clear selections</button></div><button id="checkoutBtn" class="primary checkout-btn" disabled>Check Out / Register</button>
+<div id="pendingBanner" class="pending-banner"></div>
+<div class="small">Prototype: selection/export works now. A registration form or database can be connected after the browsing layout is finalized.</div></div>
+</aside><div id="map"></div></main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="data/overview.js"></script>
+<script>
+const map=L.map('map',{preferCanvas:true}).setView([55,-96],4);
+const CARTO_API_KEY='cb1_4ctd_1_6788608df33142d10974dab5';
+const basemap=L.tileLayer(`https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${CARTO_API_KEY}`,{
+  maxZoom:20,
+  attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attribution/">CARTO</a>'
+}).addTo(map);
+let tileErrors=0;
+basemap.on('tileerror',()=>{
+  tileErrors++;
+  if(tileErrors===4){
+    const notice=document.createElement('div');
+    notice.style.cssText='position:absolute;z-index:1000;left:50%;top:12px;transform:translateX(-50%);background:#fff3cd;border:1px solid #e2c46d;border-radius:7px;padding:8px 12px;font:12px Arial;box-shadow:0 2px 8px rgba(0,0,0,.18)';
+    notice.textContent='Background map is temporarily unavailable. Canadian Pursuit route data can still be used.';
+    document.getElementById('map').appendChild(notice);
+  }
+});
+const regionLayers=L.layerGroup().addTo(map),segmentLayers=L.layerGroup().addTo(map),endpointLayers=L.layerGroup().addTo(map),territoryLayers=L.layerGroup().addTo(map);
+let currentRegion=null,currentData=null,currentBounds=null;const selected=new Map(),layerById=new Map();
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function colorFor(k){return '#c62828';}
+function statusColor(s){return s.status==='Tentatively Taken'?'#f4c430':(s.status==='Confirmed' || s.status==='Available to run with others'?'#1f7a4d':'#c62828');}
+function formatDate(s){return new Date(s+'T12:00:00').toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'});}
+function drawOverview(){currentRegion=null;currentData=null;regionLayers.clearLayers();segmentLayers.clearLayers();endpointLayers.clearLayers();territoryLayers.clearLayers();layerById.clear();document.getElementById('regionPanel').style.display='none';document.querySelectorAll('.region').forEach(x=>x.classList.remove('active'));const all=[];Object.entries(CP_OVERVIEW.overviewPaths).forEach(([k,p])=>{const l=L.polyline(p,{color:colorFor(k),weight:4,opacity:.9}).addTo(regionLayers);l.on('click',()=>openRegion(k));p.forEach(x=>all.push(x));});currentBounds=L.latLngBounds(all);
+  const territoryCallouts=[
+    {key:'NU',name:'Iqaluit / Nunavut',lat:63.7467,lon:-68.5167},
+    {key:'NT',name:'Yellowknife / NWT',lat:62.4540,lon:-114.3718},
+    {key:'YT',name:'Whitehorse / Yukon',lat:60.7212,lon:-135.0568}
+  ];
+  territoryCallouts.forEach(t=>{
+    const icon=L.divIcon({className:'',html:`<div class="territory-icon">${t.name}</div>`,iconSize:null});
+    const mk=L.marker([t.lat,t.lon],{icon}).addTo(territoryLayers);
+    mk.on('click',()=>openRegion(t.key));
+  });
+  map.fitBounds(currentBounds,{padding:[20,20]});}
+function loadRegion(k){return new Promise((res,rej)=>{if(window.CP_REGION_DATA&&window.CP_REGION_DATA[k])return res(window.CP_REGION_DATA[k]);const s=document.createElement('script');s.src='data/'+k+'.js';s.onload=()=>res(window.CP_REGION_DATA[k]);s.onerror=rej;document.body.appendChild(s);});}
+async function openRegion(k){currentRegion=k;document.querySelectorAll('.region').forEach(x=>x.classList.toggle('active',x.dataset.key===k));const d=await loadRegion(k);currentData=d;regionLayers.clearLayers();segmentLayers.clearLayers();endpointLayers.clearLayers();territoryLayers.clearLayers();layerById.clear();const all=[];d.segments.forEach(s=>{const chosen=selected.has(s.id);const displayColor=chosen && s.status!=='Confirmed' && s.status!=='Available to run with others'?'#f4c430':statusColor(s);const l=L.polyline(s.geometry,{color:displayColor,weight:chosen?7:5,opacity:.9}).addTo(segmentLayers);layerById.set(s.id,l);s.geometry.forEach(p=>all.push(p));l.bindPopup(popupHtml(s));l.on('click',()=>setTimeout(bindPopupButton,0));});currentBounds=L.latLngBounds(all);map.fitBounds(currentBounds,{padding:[20,20]});document.getElementById('regionPanel').style.display='block';document.getElementById('regionHeading').textContent=`${d.name} • ${d.dateLabel} • Days ${d.dayStart}–${d.dayEnd} • ${d.segmentCount} selectable segments`;populateDayFilter(d);renderSegments();}
+function popupHtml(s){return `<div class="popup-title">${esc(s.label)}</div><div class="popup-meta">Day ${s.day} • ${esc(formatDate(s.date))} • ${s.lengthKm.toFixed(1)} km<br>${esc(s.notes||'')}<br><span class="status-pill ${s.status==='Tentatively Taken'?'pending':(s.status==='Available'?'available':'together')}">${esc(selected.has(s.id) && s.status!=='Confirmed' && s.status!=='Available to run with others'?'Tentative':s.status)}</span></div><button class="${selected.has(s.id)?'selected':'primary'}" data-popup-select="${s.id}">${selected.has(s.id)?'Remove selection':'Select this segment'}</button>`;}
+function bindPopupButton(){document.querySelectorAll('[data-popup-select]').forEach(b=>b.addEventListener('click',()=>toggleSelectionById(b.dataset.popupSelect)));}
+function populateDayFilter(d){const e=document.getElementById('dayFilter');e.innerHTML='<option value="">All days</option>';[...new Set(d.segments.map(s=>s.day))].sort((a,b)=>a-b).forEach(x=>{const o=document.createElement('option');o.value=x;o.textContent='Day '+x;e.appendChild(o);});}
+function filteredSegments(){if(!currentData)return[];const day=document.getElementById('dayFilter').value,max=parseFloat(document.getElementById('maxKm').value),text=document.getElementById('textFilter').value.trim().toLowerCase();return currentData.segments.filter(s=>(!day||String(s.day)===day)&&(!Number.isFinite(max)||s.lengthKm<=max)&&(!text||(s.label+' '+s.notes+' '+s.date).toLowerCase().includes(text)));}
+function renderSegments(){const e=document.getElementById('segmentList'),a=filteredSegments();if(!a.length){e.innerHTML='<div class="empty">No segments match those filters.</div>';return;}e.innerHTML=a.map(s=>`<div class="segment"><div class="segment-title">${esc(s.label)}</div><div class="segment-meta">Day ${s.day} • ${esc(formatDate(s.date))} • ${s.lengthKm.toFixed(1)} km</div><div class="segment-meta">${esc(s.notes||'')}<br><span class="status-pill ${s.status==='Tentatively Taken'?'pending':(s.status==='Available'?'available':'together')}">${esc(selected.has(s.id) && s.status!=='Confirmed' && s.status!=='Available to run with others'?'Tentative':s.status)}</span></div><div class="segment-actions"><button data-zoom="${s.id}">Show on map</button><button data-select="${s.id}" class="${selected.has(s.id)?'selected':'primary'}">${selected.has(s.id)?'Selected ✓':'Select'}</button></div></div>`).join('');e.querySelectorAll('[data-zoom]').forEach(b=>b.addEventListener('click',()=>{const s=currentData.segments.find(x=>x.id===b.dataset.zoom);map.fitBounds(L.latLngBounds(s.geometry),{padding:[35,35],maxZoom:15});
+    endpointLayers.clearLayers();
+    const startIcon=L.divIcon({className:'endpoint-icon',html:'S',iconSize:[24,24],iconAnchor:[12,12]});
+    const endIcon=L.divIcon({className:'endpoint-icon',html:'E',iconSize:[24,24],iconAnchor:[12,12]});
+    L.marker([s.startLat,s.startLon],{icon:startIcon}).bindTooltip('START',{permanent:true,direction:'top'}).addTo(endpointLayers);
+    L.marker([s.endLat,s.endLon],{icon:endIcon}).bindTooltip('END',{permanent:true,direction:'top'}).addTo(endpointLayers);
+    const l=layerById.get(s.id);if(l){l.openPopup();setTimeout(bindPopupButton,0);}}));e.querySelectorAll('[data-select]').forEach(b=>b.addEventListener('click',()=>toggleSelectionById(b.dataset.select)));}
+function findSeg(id){if(currentData){const s=currentData.segments.find(x=>x.id===id);if(s)return{s,region:currentData};}for(const k of Object.keys(window.CP_REGION_DATA||{})){const d=window.CP_REGION_DATA[k],s=d.segments.find(x=>x.id===id);if(s)return{s,region:d};}return null;}
+function toggleSelectionById(id){const f=findSeg(id);if(!f)return;if(selected.has(id)){
+      selected.delete(id);
+      f.s.status='Available';
+    }else{
+      f.s.status='Available to run with others';
+      selected.set(id,{...f.s,regionKey:f.region.key,regionName:f.region.name});
+      endpointLayers.clearLayers();
+      const startIcon=L.divIcon({className:'endpoint-icon',html:'S',iconSize:[24,24],iconAnchor:[12,12]});
+      const endIcon=L.divIcon({className:'endpoint-icon',html:'E',iconSize:[24,24],iconAnchor:[12,12]});
+      L.marker([f.s.startLat,f.s.startLon],{icon:startIcon}).bindTooltip('START',{permanent:true,direction:'top'}).addTo(endpointLayers);
+      L.marker([f.s.endLat,f.s.endLon],{icon:endIcon}).bindTooltip('END',{permanent:true,direction:'top'}).addTo(endpointLayers);
+    }const l=layerById.get(id);if(l){l.setStyle({color:selected.has(id) && f.s.status!=='Confirmed' && f.s.status!=='Available to run with others'?'#f4c430':statusColor(f.s),weight:selected.has(id)?7:5});l.setPopupContent(popupHtml(f.s));}renderSegments();renderSelection();setTimeout(bindPopupButton,0);}
+function renderSelection(){const a=[...selected.values()].sort((x,y)=>x.ref-y.ref);document.getElementById('selectedCount').textContent=a.length;document.getElementById('selectedHeader').textContent=a.length+' selected';document.getElementById('downloadCsv').disabled=!a.length;document.getElementById('clearSelection').disabled=!a.length;document.getElementById('checkoutBtn').disabled=!a.length;const e=document.getElementById('selectionList');if(!a.length){e.className='empty';e.textContent='Nothing selected yet.';return;}e.className='';const total=a.reduce((n,s)=>n+s.lengthKm,0);e.innerHTML=a.map(s=>`<div class="selection-row"><strong>${esc(s.regionName)} — ${esc(s.label)}</strong><br>Day ${s.day}, ${esc(formatDate(s.date))} • ${s.lengthKm.toFixed(1)} km</div>`).join('')+`<div class="selection-row"><strong>Total selected distance: ${total.toFixed(1)} km</strong></div>`;}
+function downloadCsv(){const a=[...selected.values()].sort((x,y)=>x.ref-y.ref),q=v=>'"'+String(v??'').replaceAll('"','""')+'"',
+    rows=[['Segment ID','Region','Day','Date','Label','Distance km','Status','Start Coordinates','End Coordinates','Notes'],
+    ...a.map(s=>[s.id,s.regionName,s.day,s.date,s.label,s.lengthKm,s.status,`${s.startLat}, ${s.startLon}`,`${s.endLat}, ${s.endLon}`,s.notes])],csv=rows.map(r=>r.map(q).join(',')).join('\r\n'),blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='Canadian_Pursuit_selected_segments.csv';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);}
+const regionsEl=document.getElementById('regions');CP_OVERVIEW.regions.forEach(r=>{const b=document.createElement('button');b.className='region';b.dataset.key=r.key;b.innerHTML=`<strong>${esc(r.name)}</strong><span>${esc(r.dateLabel)} • Days ${r.dayStart}–${r.dayEnd} • ${r.segmentCount} segments</span>`;b.addEventListener('click',()=>openRegion(r.key));regionsEl.appendChild(b);});
+document.getElementById('dayFilter').addEventListener('change',renderSegments);document.getElementById('maxKm').addEventListener('input',renderSegments);document.getElementById('textFilter').addEventListener('input',renderSegments);
+document.getElementById('clearFilters').addEventListener('click',()=>{document.getElementById('dayFilter').value='';document.getElementById('maxKm').value='';document.getElementById('textFilter').value='';renderSegments();});
+document.getElementById('overviewBtn').addEventListener('click',drawOverview);document.getElementById('fitBtn').addEventListener('click',()=>{if(currentBounds)map.fitBounds(currentBounds,{padding:[20,20]});});
+document.getElementById('downloadCsv').addEventListener('click',downloadCsv);document.getElementById('clearSelection').addEventListener('click',()=>{selected.clear();if(currentRegion)openRegion(currentRegion);renderSelection();});
+
+const checkoutBackdrop=document.getElementById('checkoutBackdrop');
+function checkoutRows(){
+  return [...selected.values()].sort((a,b)=>a.ref-b.ref);
+}
+function openCheckout(){
+  const a=checkoutRows(); if(!a.length)return;
+  document.getElementById('checkoutSummary').innerHTML=a.map(s=>`<div class="checkout-seg"><strong>${esc(s.regionName)} — ${esc(s.label)}</strong><br>Day ${s.day}, ${esc(formatDate(s.date))} • ${s.lengthKm.toFixed(1)} km</div>`).join('');
+  checkoutBackdrop.classList.add('open');checkoutBackdrop.setAttribute('aria-hidden','false');
+}
+function closeCheckout(){checkoutBackdrop.classList.remove('open');checkoutBackdrop.setAttribute('aria-hidden','true');}
+document.getElementById('checkoutBtn').addEventListener('click',openCheckout);
+document.getElementById('cancelCheckout').addEventListener('click',closeCheckout);
+checkoutBackdrop.addEventListener('click',e=>{if(e.target===checkoutBackdrop)closeCheckout();});
+let pendingRegistrationPayload=null;
+document.getElementById('registrationForm').addEventListener('submit',e=>{
+ e.preventDefault(); const a=checkoutRows();
+ pendingRegistrationPayload={type:'CP_REGISTRATION',firstName:regFirst.value.trim(),lastName:regLast.value.trim(),city:regCity.value.trim(),email:regEmail.value.trim(),participation:document.querySelector('input[name="participation"]:checked')?.value,comments:regComments.value.trim(),segmentIds:a.map(s=>s.id)};
+ const b=e.target.querySelector('button[type="submit"]');b.disabled=true;b.textContent='Submitting...';
+ window.parent.postMessage(pendingRegistrationPayload,'*');
+});
+window.addEventListener('message',event=>{
+ const m=event.data;if(!m||!m.type)return;
+ if(m.type==='CP_REGISTRATION_SUCCESS'){
+  const a=checkoutRows();a.forEach(x=>{const f=findSeg(x.id);if(f&&f.s.status!=='Confirmed')f.s.status='Tentative';});
+  pendingBanner.innerHTML=`<strong>Registration request submitted.</strong><br>Reference: ${esc(m.registrationId)}. Your selected segment(s) are now tentative while the request is reviewed.`;pendingBanner.classList.add('show');
+  selected.clear();closeCheckout();registrationForm.reset();const b=registrationForm.querySelector('button[type="submit"]');b.disabled=false;b.textContent='Submit registration request';renderSelection();if(currentRegion)openRegion(currentRegion);
+ }
+ if(m.type==='CP_REGISTRATION_ERROR'){const b=registrationForm.querySelector('button[type="submit"]');b.disabled=false;b.textContent='Submit registration request';alert(m.message||'Registration could not be completed.');}
+ if(m.type==='CP_SEGMENT_STATUSES'){const s=m.statuses||{};Object.values(REGIONS).forEach(r=>{if(r&&Array.isArray(r.segments))r.segments.forEach(x=>{if(s[x.id])x.status=s[x.id];});});drawOverview();if(currentRegion)openRegion(currentRegion);}
+});
+window.parent.postMessage({type:'CP_GET_SEGMENT_STATUSES'},'*');
+
+drawOverview();renderSelection();
+requestAnimationFrame(()=>{map.invalidateSize();drawOverview();});
+window.addEventListener('load',()=>{setTimeout(()=>{map.invalidateSize();drawOverview();},100);});
+</script>
+<div id="checkoutBackdrop" class="modal-backdrop" aria-hidden="true">
+  <div class="checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkoutTitle">
+    <h2 id="checkoutTitle">Canadian Pursuit Registration</h2>
+    <div class="small">Review your selected segments and tell us how you plan to participate.</div>
+    <h3>Your selected segments</h3>
+    <div id="checkoutSummary" class="checkout-summary"></div>
+    <h3>Your information</h3>
+    <form id="registrationForm">
+      <div class="form-grid">
+        <label>First name *<input id="regFirst" required autocomplete="given-name"></label>
+        <label>Last name *<input id="regLast" required autocomplete="family-name"></label>
+        <label>City of residence *<input id="regCity" required autocomplete="address-level2"></label>
+        <label>Email address *<input id="regEmail" type="email" required autocomplete="email"></label>
+        <div class="full">
+          <div class="small" style="margin-bottom:6px">How will you participate? *</div>
+          <div class="participation">
+            <label><input type="radio" name="participation" value="On location" required><span><strong>On location</strong><br><span class="small">I intend to complete the selected segment(s) on the actual Canadian Pursuit route.</span></span></label>
+            <label><input type="radio" name="participation" value="Virtual" required><span><strong>Virtually</strong><br><span class="small">I will complete the selected distance in my own location.</span></span></label>
+          </div>
+        </div>
+        <label class="full">Comments or message (optional)<textarea id="regComments" placeholder="Anything you would like the Canadian Pursuit team to know"></textarea></label>
+      </div>
+      <div class="notice">Submitting sends your registration request to Canadian Pursuit. Your selected segment(s) will be marked Tentative while the request is reviewed.</div>
+      <div class="modal-actions"><button type="button" id="cancelCheckout">Cancel</button><button type="submit" class="primary">Submit registration request</button></div>
+    </form>
+  </div>
+</div>
+</body></html>
