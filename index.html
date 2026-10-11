@@ -97,7 +97,7 @@ const regionLayers=L.layerGroup().addTo(map),segmentLayers=L.layerGroup().addTo(
 let currentRegion=null,currentData=null,currentBounds=null;const selected=new Map(),layerById=new Map();
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function colorFor(k){return '#c62828';}
-function statusColor(s){return s.status==='Tentatively Taken'?'#f4c430':(s.status==='Confirmed' || s.status==='Available to run with others'?'#1f7a4d':'#c62828');}
+function statusColor(s){return s.status==='Tentative'?'#f4c430':(s.status==='Confirmed' || s.status==='Available to run with others'?'#1f7a4d':'#c62828');}
 function formatDate(s){return new Date(s+'T12:00:00').toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'});}
 function drawOverview(){currentRegion=null;currentData=null;regionLayers.clearLayers();segmentLayers.clearLayers();endpointLayers.clearLayers();territoryLayers.clearLayers();layerById.clear();document.getElementById('regionPanel').style.display='none';document.querySelectorAll('.region').forEach(x=>x.classList.remove('active'));const all=[];Object.entries(CP_OVERVIEW.overviewPaths).forEach(([k,p])=>{const l=L.polyline(p,{color:colorFor(k),weight:4,opacity:.9}).addTo(regionLayers);l.on('click',()=>openRegion(k));p.forEach(x=>all.push(x));});currentBounds=L.latLngBounds(all);
   const territoryCallouts=[
@@ -179,9 +179,21 @@ window.addEventListener('message',event=>{
 });
 window.parent.postMessage({type:'CP_GET_SEGMENT_STATUSES'},'*');
 
-drawOverview();renderSelection();
-requestAnimationFrame(()=>{map.invalidateSize();drawOverview();});
-window.addEventListener('load',()=>{setTimeout(()=>{map.invalidateSize();drawOverview();},100);});
+renderSelection();
+
+function initialiseOverview(){
+  map.invalidateSize(true);
+  drawOverview();
+}
+
+// Draw once immediately, then again after the page and map container have settled.
+// This avoids a blank overview route on first load in GitHub Pages / embedded pages.
+initialiseOverview();
+requestAnimationFrame(initialiseOverview);
+window.addEventListener('load',()=>{
+  setTimeout(initialiseOverview,300);
+  setTimeout(initialiseOverview,1000);
+});
 </script>
 <div id="checkoutBackdrop" class="modal-backdrop" aria-hidden="true">
   <div class="checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkoutTitle">

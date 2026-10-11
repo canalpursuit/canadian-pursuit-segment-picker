@@ -1,0 +1,5 @@
+Canadian Pursuit Segment Picker v8.1
+Fixes:
+- Canada overview route is redrawn after the page/map container settles so it appears automatically on first load.
+- Wix status label 'Tentative' is correctly rendered yellow.
+Upload these files over the existing GitHub repository files.
