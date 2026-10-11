@@ -122,6 +122,11 @@ basemap.on('tileerror',()=>{
 });
 const regionLayers=L.layerGroup().addTo(map),segmentLayers=L.layerGroup().addTo(map),endpointLayers=L.layerGroup().addTo(map),territoryLayers=L.layerGroup().addTo(map);
 let currentRegion=null,currentData=null,currentBounds=null;const selected=new Map(),layerById=new Map();
+let sharedSegmentStatuses={};
+function applySharedStatuses(d){
+  if(!d||!Array.isArray(d.segments))return;
+  d.segments.forEach(x=>{if(sharedSegmentStatuses[x.id])x.status=sharedSegmentStatuses[x.id];});
+}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function colorFor(k){return '#c62828';}
 function statusColor(s){return s.status==='Tentative'?'#f4c430':(s.status==='Confirmed' || s.status==='Available to run with others'?'#1f7a4d':'#c62828');}
@@ -139,7 +144,7 @@ function drawOverview(){currentRegion=null;currentData=null;regionLayers.clearLa
   });
   map.fitBounds(currentBounds,{padding:[20,20]});}
 function loadRegion(k){return new Promise((res,rej)=>{if(window.CP_REGION_DATA&&window.CP_REGION_DATA[k])return res(window.CP_REGION_DATA[k]);const s=document.createElement('script');s.src='data/'+k+'.js';s.onload=()=>res(window.CP_REGION_DATA[k]);s.onerror=rej;document.body.appendChild(s);});}
-async function openRegion(k){currentRegion=k;document.querySelectorAll('.region').forEach(x=>x.classList.toggle('active',x.dataset.key===k));const d=await loadRegion(k);currentData=d;regionLayers.clearLayers();segmentLayers.clearLayers();endpointLayers.clearLayers();territoryLayers.clearLayers();layerById.clear();const all=[];d.segments.forEach(s=>{const chosen=selected.has(s.id);const displayColor=chosen && s.status!=='Confirmed' && s.status!=='Available to run with others'?'#f4c430':statusColor(s);const l=L.polyline(s.geometry,{color:displayColor,weight:chosen?7:5,opacity:.9}).addTo(segmentLayers);layerById.set(s.id,l);s.geometry.forEach(p=>all.push(p));l.bindPopup(popupHtml(s));l.on('click',()=>setTimeout(bindPopupButton,0));});currentBounds=L.latLngBounds(all);map.fitBounds(currentBounds,{padding:[20,20]});document.getElementById('regionPanel').style.display='block';document.getElementById('regionHeading').textContent=`${d.name} • ${d.dateLabel} • Days ${d.dayStart}–${d.dayEnd} • ${d.segmentCount} selectable segments`;populateDayFilter(d);renderSegments();}
+async function openRegion(k){currentRegion=k;document.querySelectorAll('.region').forEach(x=>x.classList.toggle('active',x.dataset.key===k));const d=await loadRegion(k);applySharedStatuses(d);currentData=d;regionLayers.clearLayers();segmentLayers.clearLayers();endpointLayers.clearLayers();territoryLayers.clearLayers();layerById.clear();const all=[];d.segments.forEach(s=>{const chosen=selected.has(s.id);const displayColor=chosen && s.status!=='Confirmed' && s.status!=='Available to run with others'?'#f4c430':statusColor(s);const l=L.polyline(s.geometry,{color:displayColor,weight:chosen?7:5,opacity:.9}).addTo(segmentLayers);layerById.set(s.id,l);s.geometry.forEach(p=>all.push(p));l.bindPopup(popupHtml(s));l.on('click',()=>setTimeout(bindPopupButton,0));});currentBounds=L.latLngBounds(all);map.fitBounds(currentBounds,{padding:[20,20]});document.getElementById('regionPanel').style.display='block';document.getElementById('regionHeading').textContent=`${d.name} • ${d.dateLabel} • Days ${d.dayStart}–${d.dayEnd} • ${d.segmentCount} selectable segments`;populateDayFilter(d);renderSegments();}
 function popupHtml(s){return `<div class="popup-title">${esc(s.label)}</div><div class="popup-meta">Day ${s.day} • ${esc(formatDate(s.date))} • ${s.lengthKm.toFixed(1)} km<br>${esc(s.notes||'')}<br><span class="status-pill ${s.status==='Tentatively Taken'?'pending':(s.status==='Available'?'available':'together')}">${esc(selected.has(s.id) && s.status!=='Confirmed' && s.status!=='Available to run with others'?'Tentative':s.status)}</span></div><button class="${selected.has(s.id)?'selected':'primary'}" data-popup-select="${s.id}">${selected.has(s.id)?'Remove selection':'Select this segment'}</button>`;}
 function bindPopupButton(){document.querySelectorAll('[data-popup-select]').forEach(b=>b.addEventListener('click',()=>toggleSelectionById(b.dataset.popupSelect)));}
 function populateDayFilter(d){const e=document.getElementById('dayFilter');e.innerHTML='<option value="">All days</option>';[...new Set(d.segments.map(s=>s.day))].sort((a,b)=>a-b).forEach(x=>{const o=document.createElement('option');o.value=x;o.textContent='Day '+x;e.appendChild(o);});}
@@ -202,7 +207,11 @@ window.addEventListener('message',event=>{
   selected.clear();closeCheckout();registrationForm.reset();const b=registrationForm.querySelector('button[type="submit"]');b.disabled=false;b.textContent='Submit registration request';renderSelection();if(currentRegion)openRegion(currentRegion);
  }
  if(m.type==='CP_REGISTRATION_ERROR'){const b=registrationForm.querySelector('button[type="submit"]');b.disabled=false;b.textContent='Submit registration request';alert(m.message||'Registration could not be completed.');}
- if(m.type==='CP_SEGMENT_STATUSES'){const s=m.statuses||{};Object.values(REGIONS).forEach(r=>{if(r&&Array.isArray(r.segments))r.segments.forEach(x=>{if(s[x.id])x.status=s[x.id];});});drawOverview();if(currentRegion)openRegion(currentRegion);}
+ if(m.type==='CP_SEGMENT_STATUSES'){
+  sharedSegmentStatuses=m.statuses||{};
+  Object.values(window.CP_REGION_DATA||{}).forEach(applySharedStatuses);
+  if(currentRegion)openRegion(currentRegion);
+}
 });
 // Tell Wix that the hosted picker has finished loading and is ready to receive data.
 window.parent.postMessage({type:'CP_PICKER_READY'},'*');
