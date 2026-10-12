@@ -204,7 +204,7 @@ window.addEventListener('message',event=>{
  if(m.type==='CP_REGISTRATION_SUCCESS'){
   const a=checkoutRows();a.forEach(x=>{const f=findSeg(x.id);if(f&&f.s.status!=='Confirmed')f.s.status='Tentative';});
   pendingBanner.innerHTML=`<strong>Registration request submitted.</strong><br>Reference: ${esc(m.registrationId)}. Your selected segment(s) are now tentative while the request is reviewed.`;pendingBanner.classList.add('show');
-  selected.clear();closeCheckout();registrationForm.reset();const b=registrationForm.querySelector('button[type="submit"]');b.disabled=false;b.textContent='Submit registration request';renderSelection();if(currentRegion)openRegion(currentRegion);
+  selected.clear();closeCheckout();registrationForm.reset();const b=registrationForm.querySelector('button[type="submit"]');b.disabled=false;b.textContent='Submit registration request';renderSelection();window.parent.postMessage({type:'CP_GET_SEGMENT_STATUSES'},'*');
  }
  if(m.type==='CP_REGISTRATION_ERROR'){const b=registrationForm.querySelector('button[type="submit"]');b.disabled=false;b.textContent='Submit registration request';alert(m.message||'Registration could not be completed.');}
  if(m.type==='CP_SEGMENT_STATUSES'){
