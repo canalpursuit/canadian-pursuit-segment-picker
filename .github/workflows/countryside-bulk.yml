@@ -1,0 +1,40 @@
+name: Bulk countryside screening (experimental review)
+on:
+  push:
+    branches:
+      - development/v8.9-mobile-day-navigation
+    paths:
+      - 'scripts/screen_bulk_osm.py'
+      - '.github/workflows/countryside-bulk.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  bulk-screen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install geographic dependencies
+        run: pip install requests shapely pyproj pyshp
+      - name: Check Python syntax
+        run: python -m py_compile scripts/screen_countryside.py scripts/screen_bulk_osm.py
+      - name: Census screening (first pass)
+        run: python -u scripts/screen_countryside.py
+      - name: Bulk OpenStreetMap screening (second pass)
+        run: python -u scripts/screen_bulk_osm.py
+      - name: Upload geographic review results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: countryside-bulk-review-unverified
+          path: |
+            data/countryside-review.csv
+            data/countryside-candidates.json
+            data/countryside-bulk-review.csv
+            data/countryside-bulk-summary.json
+          if-no-files-found: warn
+          retention-days: 30
