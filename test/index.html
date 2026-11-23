@@ -62,7 +62,7 @@ button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}button
   .selection{position:relative}
 }
 @media(max-width:390px){.region-grid{grid-template-columns:1fr}}
-.waiver-section{margin-top:18px;border-top:1px solid var(--line);padding-top:8px}.waiver-text{max-height:190px;overflow:auto;white-space:pre-wrap;border:1px solid var(--line);border-radius:8px;background:#f6f8fb;padding:12px;font-size:12px;line-height:1.55}.waiver-field{display:block;margin-top:12px}.waiver-field input{margin-top:5px}.waiver-consent{display:flex;gap:9px;align-items:flex-start;margin-top:12px;color:var(--ink);font-size:13px}.waiver-consent input{width:18px;min-width:18px;height:18px;margin:0}</style></head>
+.waiver-section{margin-top:18px;border-top:1px solid var(--line);padding-top:8px}.waiver-text{max-height:190px;overflow:auto;white-space:pre-wrap;border:1px solid var(--line);border-radius:8px;background:#f6f8fb;padding:12px;font-size:12px;line-height:1.55}.waiver-field{display:block;margin-top:12px}.waiver-field input{margin-top:5px}.waiver-consent{display:flex;gap:9px;align-items:flex-start;margin-top:12px;color:var(--ink);font-size:13px}.waiver-consent input{width:18px;min-width:18px;height:18px;margin:0}.participation-choice{background:white;padding:16px 18px;border-bottom:1px solid var(--line)}.participation-choice h2{margin:0 0 12px;font-size:18px}.entry-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.entry-option{text-align:left;border:2px solid #cbd5e1;border-radius:12px;background:#f8fafc;padding:16px;cursor:pointer;color:var(--ink)}.entry-option strong{display:block;font-size:16px;line-height:1.35}.entry-option span{display:block;font-size:13px;color:var(--muted);margin-top:8px}.entry-option:hover,.entry-option:focus-visible{border-color:var(--blue)}#routeChooser{display:none}#randomCountryMessage{margin:10px 0 0}@media(max-width:700px){.entry-options{grid-template-columns:1fr}}</style></head>
 <body>
 <div style="background:#fff3cd;color:#664d03;padding:9px 14px;text-align:center;font:700 13px Arial">TEST VERSION v8.9 — Registration submissions disabled</div>
 <header>
@@ -73,7 +73,7 @@ button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}button
 <div class="sponsor-card wide"><img src="../assets/mobility-tape.jpg" alt="Mobility Tape"></div>
 <div class="sponsor-card round"><img src="../assets/price-health.png" alt="Price Health"></div>
 </div></div><div id="selectedHeader" class="count">0 selected</div></div></header>
-<main><aside>
+<section id="participationChoice" class="participation-choice" aria-label="Choose how to participate"><h2>How would you like to participate?</h2><div class="entry-options"><button type="button" id="randomCountryBtn" class="entry-option"><strong>Assign me a random countryside segment to run virtually</strong><span>Get a surprise location on the Canadian Pursuit route.</span></button><button type="button" id="chooseOwnBtn" class="entry-option"><strong>Choose my own segment to run virtually or in person</strong><span>Browse provinces, days and route segments.</span></button></div><p id="randomCountryMessage" class="small" role="status"></p></section><main id="routeChooser"><aside>
 <div class="toolbar"><button id="overviewBtn" class="primary">Canada overview</button><button id="fitBtn">Fit current map</button></div>
 <h2>1. Choose a province / territory</h2>
     <div class="status-legend">
@@ -138,6 +138,9 @@ fit to participate in this event.</div><label class="waiver-field">Full legal na
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../data/overview.js"></script>
 <script>
+const routeChooser=document.getElementById('routeChooser');
+document.getElementById('chooseOwnBtn').addEventListener('click',()=>{routeChooser.style.display='';routeChooser.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>map.invalidateSize(),100);});
+document.getElementById('randomCountryBtn').addEventListener('click',()=>{document.getElementById('randomCountryMessage').textContent='Countryside eligibility is being mapped and verified. Random assignment is not available yet; please choose your own segment for now.';});
 const map=L.map('map',{preferCanvas:true}).setView([55,-96],4);
 const CARTO_API_KEY='cb1_4ctd_1_6788608df33142d10974dab5';
 const basemap=L.tileLayer(`https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${CARTO_API_KEY}`,{
