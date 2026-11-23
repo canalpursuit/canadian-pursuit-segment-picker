@@ -5,6 +5,7 @@ on:
       - development/v8.9-mobile-day-navigation
     paths:
       - 'scripts/screen_countryside.py'
+      - 'scripts/screen_osm_settlements.py'
       - '.github/workflows/countryside-screen.yml'
   workflow_dispatch:
 permissions:
@@ -12,7 +13,7 @@ permissions:
 jobs:
   screen:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -20,10 +21,14 @@ jobs:
           python-version: '3.11'
       - run: pip install requests shapely pyproj
       - run: python scripts/screen_countryside.py
+      - run: python -m py_compile scripts/screen_osm_settlements.py
+      - run: python -u scripts/screen_osm_settlements.py
       - uses: actions/upload-artifact@v4
         with:
-          name: countryside-candidates-unverified
+          name: countryside-two-stage-review-unverified
           path: |
             data/countryside-review.csv
             data/countryside-candidates.json
+            data/countryside-osm-review.csv
+            data/countryside-osm-summary.json
           retention-days: 30
