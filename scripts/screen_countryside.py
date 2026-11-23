@@ -30,6 +30,7 @@ def get_json(url,params):
 
 def load_segments():
     out=[]
+    unresolved=[]
     for key in REGIONS:
         raw=(ROOT/"data"/(key+".js")).read_text(encoding="utf-8")
         marker="window.CP_REGION_DATA["+json.dumps(key)+"]="
@@ -37,10 +38,10 @@ def load_segments():
         data=json.JSONDecoder().raw_decode(raw[start:])[0]
         for s in data["segments"]:
             coords=s.get("geometry") or []
-            if len(coords)<2: raise ValueError(f"Missing route geometry: {s.get('id')}")
+            if len(coords)<2:\n                unresolved.append({"segment_id":s["id"],"region":key,"day":s["day"],"reason":"Insufficient route polyline coordinates"})\n                continue
             line=LineString([(p[1],p[0]) for p in coords])
             out.append((s,key,line))
-    return out
+    return out,unresolved
 
 def fetch_layer(layer,bounds):
     """Retrieve all polygons in a bbox using pagination; fail on errors."""
@@ -63,8 +64,8 @@ def fetch_layer(layer,bounds):
     return features
 
 def main():
-    segments=load_segments()
-    print(f"Loaded {len(segments)} route segments")
+    segments,unresolved=load_segments()
+    print(f"Loaded {len(segments)} segments with usable geometry; {len(unresolved)} unresolved (excluded from candidates)")
     # Query by regional extent to avoid downloading unrelated polygons.
     regions={}
     for s,k,line in segments: regions.setdefault(k,[]).append((s,line))
@@ -94,18 +95,18 @@ def main():
                 "classification":"excluded_census_settlement" if hits else "candidate_needs_small_settlement_review"
             })
         print(f"{key}: {len(items)} segments; {len(settlement)} settlement polygons")
-    if len(results)!=len(segments): raise RuntimeError("Missing segment classifications")
+    if len(results)!=len(segments): raise RuntimeError("Missing segment classifications")\n    for item in unresolved:\n        results.append({"segment_id":item["segment_id"],"region":item["region"],"day":item["day"],"label":"","length_km":"","census_overlap":"","population_centre_overlap":"","designated_place_overlap":"","classification":"unresolved_missing_geometry"})
     output=ROOT/"data"
     with (output/"countryside-review.csv").open("w",newline="",encoding="utf-8") as file:
         writer=csv.DictWriter(file,fieldnames=list(results[0]))
         writer.writeheader();writer.writerows(results)
-    candidates=[r["segment_id"] for r in results if not r["census_overlap"]]
+    candidates=[r["segment_id"] for r in results if r["classification"]=="candidate_needs_small_settlement_review"]
     (output/"countryside-candidates.json").write_text(json.dumps({
         "status":"UNVERIFIED: candidates only, NOT eligible for assignment",
         "sources":["Statistics Canada 2021 Cartographic Boundary Files, PC layer 7, DPL layer 8"],
         "candidates":candidates
     },indent=2)+"\n",encoding="utf-8")
-    print(f"{len(candidates)} preliminary candidates. Manual small-settlement review REQUIRED.")
+    print(f"{len(candidates)} preliminary candidates; {len(unresolved)} segments excluded for missing geometry. Manual small-settlement review REQUIRED.")
     print("The website's countryside-eligible.js is intentionally NOT updated.")
 
 if __name__=="__main__":
