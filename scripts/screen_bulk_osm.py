@@ -100,6 +100,7 @@ def read_features(files):
         try:
             reader=shapefile.Reader(str(filename),encoding="utf-8",encodingErrors="replace")
             fields=[f[0] for f in reader.fields[1:]]
+            skipped_empty=0
             for sr in reader.iterShapeRecords():
                 tags=dict(zip(fields,sr.record))
                 kind=str(tags.get("fclass") or tags.get("type") or "").lower()
@@ -110,11 +111,17 @@ def read_features(files):
                     if kind not in PLACE_RADII:continue
                     buffer_m=PLACE_RADII[kind]
                 try:
+                    if not sr.shape.points:
+                        skipped_empty+=1
+                        continue
                     geom=shape(sr.shape.__geo_interface__)
                     if geom.is_empty:continue
                     geom=transform(PROJECT,geom).buffer(buffer_m)
-                except Exception:continue
+                except Exception:
+                    skipped_empty+=1
+                    continue
                 features.append((geom,str(tags.get("name") or kind)))
+            if skipped_empty:print(f"{filename.name}: skipped {skipped_empty} empty shapes",flush=True)
         except Exception as exc:
             raise RuntimeError(f"Unable to read {filename.name}: {exc}") from exc
     return features
