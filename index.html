@@ -138,7 +138,7 @@ fit to participate in this event.</div><label class="waiver-field">Full legal na
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="data/overview.js"></script><script src="data/countryside-eligible.js"></script>
 <script>
 const routeChooser=document.getElementById('routeChooser');
-document.getElementById('chooseOwnBtn').addEventListener('click',()=>{routeChooser.classList.add('open');routeChooser.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>map.invalidateSize(),100);});
+document.getElementById('chooseOwnBtn').addEventListener('click',()=>{routeChooser.classList.add('open');routeChooser.scrollIntoView({behavior:'smooth',block:'start'});requestAnimationFrame(()=>{map.invalidateSize(true);if(!currentRegion)drawOverview();});});
 document.getElementById('randomCountryBtn').addEventListener('click',async()=>{
  const message=document.getElementById('randomCountryMessage');
  const manifest=window.CP_COUNTRYSIDE_ELIGIBLE;
@@ -332,26 +332,6 @@ window.parent.postMessage({type:'CP_PICKER_READY'},'*');
 
 renderSelection();
 
-// Use the same control path that is known to work when the visitor presses
-// Canada Overview.  Waiting for both Leaflet and the page layout prevents
-// the initial route layer from being lost during first render.
-function showInitialCanadaOverview(){
-  map.invalidateSize(true);
-  const overviewButton=document.getElementById('overviewBtn');
-  if(overviewButton){
-    overviewButton.click();
-  }else{
-    drawOverview();
-  }
-}
-
-map.whenReady(()=>{
-  requestAnimationFrame(showInitialCanadaOverview);
-});
-
-window.addEventListener('load',()=>{
-  setTimeout(showInitialCanadaOverview,250);
-  setTimeout(showInitialCanadaOverview,1000);
-});
+// The Canada overview is drawn when the chooser becomes visible.
 </script>
 </body></html>
