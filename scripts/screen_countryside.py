@@ -38,7 +38,9 @@ def load_segments():
         data=json.JSONDecoder().raw_decode(raw[start:])[0]
         for s in data["segments"]:
             coords=s.get("geometry") or []
-            if len(coords)<2:\n                unresolved.append({"segment_id":s["id"],"region":key,"day":s["day"],"reason":"Insufficient route polyline coordinates"})\n                continue
+            if len(coords)<2:
+                unresolved.append({"segment_id":s["id"],"region":key,"day":s["day"],"reason":"Insufficient route polyline coordinates"})
+                continue
             line=LineString([(p[1],p[0]) for p in coords])
             out.append((s,key,line))
     return out,unresolved
@@ -95,7 +97,9 @@ def main():
                 "classification":"excluded_census_settlement" if hits else "candidate_needs_small_settlement_review"
             })
         print(f"{key}: {len(items)} segments; {len(settlement)} settlement polygons")
-    if len(results)!=len(segments): raise RuntimeError("Missing segment classifications")\n    for item in unresolved:\n        results.append({"segment_id":item["segment_id"],"region":item["region"],"day":item["day"],"label":"","length_km":"","census_overlap":"","population_centre_overlap":"","designated_place_overlap":"","classification":"unresolved_missing_geometry"})
+    if len(results)!=len(segments): raise RuntimeError("Missing segment classifications")
+    for item in unresolved:
+        results.append({"segment_id":item["segment_id"],"region":item["region"],"day":item["day"],"label":"","length_km":"","census_overlap":"","population_centre_overlap":"","designated_place_overlap":"","classification":"unresolved_missing_geometry"})
     output=ROOT/"data"
     with (output/"countryside-review.csv").open("w",newline="",encoding="utf-8") as file:
         writer=csv.DictWriter(file,fieldnames=list(results[0]))
