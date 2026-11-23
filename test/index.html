@@ -136,11 +136,47 @@ fit to participate in this event.</div><label class="waiver-field">Full legal na
     </form>
   </div>
 </div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../data/overview.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="../data/overview.js"></script><script src="../test/countryside-eligible.js"></script>
 <script>
 const routeChooser=document.getElementById('routeChooser');
 document.getElementById('chooseOwnBtn').addEventListener('click',()=>{routeChooser.style.display='';routeChooser.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>map.invalidateSize(),100);});
-document.getElementById('randomCountryBtn').addEventListener('click',()=>{document.getElementById('randomCountryMessage').textContent='Countryside eligibility is being mapped and verified. Random assignment is not available yet; please choose your own segment for now.';});
+document.getElementById('randomCountryBtn').addEventListener('click',async()=>{
+ const message=document.getElementById('randomCountryMessage');
+ const manifest=window.CP_COUNTRYSIDE_ELIGIBLE;
+ if(!manifest?.verified||!Array.isArray(manifest.segmentIds)||!manifest.segmentIds.length){
+   message.textContent='Countryside segments are still being verified. Random assignment is not available yet.';
+   return;
+ }
+ const eligible=new Set(manifest.segmentIds);
+ const candidates=[];
+ message.textContent='Finding an available countryside segment…';
+ try{
+   const regions=await Promise.all(CP_OVERVIEW.regions.map(r=>loadRegion(r.key)));
+   for(const d of regions){
+     applySharedStatuses(d);
+     for(const segment of d.segments){
+       if(!eligible.has(segment.id)||selected.has(segment.id))continue;
+       const status=sharedSegmentStatuses[segment.id]||segment.status;
+       if(status==='Available')candidates.push({segment,region:d});
+     }
+   }
+   if(!candidates.length){message.textContent='No verified, unclaimed countryside segments are currently available.';return;}
+   const bytes=new Uint32Array(1);crypto.getRandomValues(bytes);
+   const pick=candidates[bytes[0]%candidates.length];
+   selected.clear();
+   routeChooser.style.display='';
+   await openRegion(pick.region.key);
+   document.getElementById('dayFilter').value=String(pick.segment.day);
+   renderDayMap();renderSegments();
+   toggleSelectionById(pick.segment.id);
+   const radio=document.querySelector('input[name="participation"][value="Virtual"]');
+   if(radio)radio.checked=true;
+   message.textContent='Assigned: '+pick.region.name+' — Day '+pick.segment.day+', '+pick.segment.label+' ('+pick.segment.lengthKm.toFixed(1)+' km). Review the location below, then register.';
+   document.getElementById('selectionList').scrollIntoView({behavior:'smooth',block:'center'});
+   map.invalidateSize();
+   map.fitBounds(L.latLngBounds(pick.segment.geometry),{padding:[35,35],maxZoom:13});
+ }catch(error){message.textContent='Unable to load the route data. Please try again.';console.error(error);}
+});
 const map=L.map('map',{preferCanvas:true}).setView([55,-96],4);
 const CARTO_API_KEY='cb1_4ctd_1_6788608df33142d10974dab5';
 const basemap=L.tileLayer(`https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${CARTO_API_KEY}`,{
