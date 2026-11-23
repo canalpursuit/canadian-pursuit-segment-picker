@@ -41,17 +41,17 @@ def load_route():
 def query_overpass(bbox):
     south,west,north,east=bbox
     area=f"{south:.6f},{west:.6f},{north:.6f},{east:.6f}"
-    query=f"""[out:json][timeout:100];
+    query=f"""[out:json][timeout:25];
 (
   nwr["place"~"^(city|town|village|hamlet|isolated_dwelling)$"]({area});
   nwr["landuse"="residential"]({area});
 );
 out geom;"""
     last=None
-    for attempt in range(5):
+    for attempt in range(2):
         endpoint=ENDPOINTS[attempt%len(ENDPOINTS)]
         try:
-            response=SESSION.post(endpoint,data={"data":query},timeout=125,
+            response=SESSION.post(endpoint,data={"data":query},timeout=25,
                                   headers={"User-Agent":"CanadianPursuit-CountrysideScreen/1.0"})
             response.raise_for_status()
             data=response.json()
@@ -60,7 +60,7 @@ out geom;"""
         except (requests.RequestException,ValueError,RuntimeError) as exc:
             last=exc
             print(f"Overpass attempt {attempt+1} failed: {exc}",flush=True)
-            time.sleep(min(30,4*(attempt+1)))
+            time.sleep(2)
     raise RuntimeError(f"All Overpass attempts failed: {last}")
 
 def feature_geometry(feature):
@@ -140,7 +140,7 @@ def main():
                 else "candidate_needs_manual_review")
             row["osm_query_status"]="success"
         print(f"{number}/{len(candidates)} {region} day {day}: {len(items)} segments; {len(features)} OSM features",flush=True)
-        time.sleep(1.5)
+        time.sleep(0.3)
     with (ROOT/"data"/"countryside-osm-review.csv").open("w",newline="",encoding="utf-8") as f:
         writer=csv.DictWriter(f,fieldnames=FIELDS)
         writer.writeheader();writer.writerows(rows)
