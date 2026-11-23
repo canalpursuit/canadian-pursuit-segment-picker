@@ -62,7 +62,7 @@ button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}button
   .selection{position:relative}
 }
 @media(max-width:390px){.region-grid{grid-template-columns:1fr}}
-</style></head>
+.waiver-section{margin-top:18px;border-top:1px solid var(--line);padding-top:8px}.waiver-text{max-height:190px;overflow:auto;white-space:pre-wrap;border:1px solid var(--line);border-radius:8px;background:#f6f8fb;padding:12px;font-size:12px;line-height:1.55}.waiver-field{display:block;margin-top:12px}.waiver-field input{margin-top:5px}.waiver-consent{display:flex;gap:9px;align-items:flex-start;margin-top:12px;color:var(--ink);font-size:13px}.waiver-consent input{width:18px;min-width:18px;height:18px;margin:0}</style></head>
 <body>
 <div style="background:#fff3cd;color:#664d03;padding:9px 14px;text-align:center;font:700 13px Arial">TEST VERSION v8.9 — Registration submissions disabled</div>
 <header>
@@ -115,6 +115,22 @@ button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}button
         </div>
         <label class="full">Comments or message (optional)<textarea id="regComments" placeholder="Anything you would like the Canadian Pursuit team to know"></textarea></label>
       </div>
+<section class="waiver-section"><h3>Participant waiver and electronic signature *</h3><div class="waiver-text" role="region" aria-label="Waiver text" tabindex="0">In consideration of the acceptance of my application and the permission to participate as an entrant,
+competitor or volunteer in the Canadian Pursuit for Mental Health Campaign including the use of my
+photograph/ picture for promotional purposes, I, for myself my heirs, executors, administrators, successors
+and assigns, hereby release, waive and forever discharge the Canal Pursuit Productions, all sponsors and
+contributors, organizing committees, and all other associations, sanctioning bodies and sponsoring
+companies, and all their respective agents, officials, servants, contractors, representatives, elected and
+appointed officials, successors and assigns of and from all claims, demands, damages, costs, expenses,
+actions and causes of action, whether in law or equity in respect of death, injury, loss or damage to my
+person or property however caused, arising or to arise by reason of my participation in the said event,
+whether as a spectator, participant, competitor, volunteer or otherwise, whether prior to, during or
+subsequent to the event, and notwithstanding that same may have been contributed to, or occasioned by,
+the negligence of any of the aforesaid. I further hereby undertake to hold and save harmless and agree to
+indemnify all of the aforesaid from and against any and all liability incurred by all of them as a result of, or in
+any way connected with, my participation in the said event. By submitting this entry I acknowledge having
+read, understood and agreed to the above waiver, release and indemnity, and I warrant that I am physically
+fit to participate in this event.</div><label class="waiver-field">Full legal name (electronic signature) *<input id="waiverSignature" required autocomplete="name" placeholder="Type your full legal name"></label><label class="waiver-consent"><input type="checkbox" id="waiverAgree" required><span>I have read and agree to the waiver above, and I sign electronically using the name entered.</span></label><div class="notice">The date and time of agreement will be recorded when registration is submitted.</div></section>
       <div class="notice">Submitting sends your registration request to Canadian Pursuit. Your selected segment(s) will be marked Tentative while the request is reviewed.</div>
       <div class="modal-actions"><button type="button" id="cancelCheckout">Cancel</button><button type="submit" class="primary">Submit registration request</button></div>
     </form>
@@ -254,8 +270,8 @@ document.getElementById('cancelCheckout').addEventListener('click',closeCheckout
 checkoutBackdrop.addEventListener('click',e=>{if(e.target===checkoutBackdrop)closeCheckout();});
 let pendingRegistrationPayload=null;
 document.getElementById('registrationForm').addEventListener('submit',e=>{
- e.preventDefault(); const a=checkoutRows();
- pendingRegistrationPayload={type:'CP_REGISTRATION',firstName:regFirst.value.trim(),lastName:regLast.value.trim(),city:regCity.value.trim(),email:regEmail.value.trim(),participation:document.querySelector('input[name="participation"]:checked')?.value,comments:regComments.value.trim(),segmentIds:a.map(s=>s.id)};
+ e.preventDefault(); if(!waiverSignature.value.trim()||!waiverAgree.checked){alert('Please sign and accept the waiver.');return;} const a=checkoutRows();
+ pendingRegistrationPayload={type:'CP_REGISTRATION',firstName:regFirst.value.trim(),lastName:regLast.value.trim(),city:regCity.value.trim(),email:regEmail.value.trim(),participation:document.querySelector('input[name="participation"]:checked')?.value,comments:regComments.value.trim(),segmentIds:a.map(s=>s.id),waiverSignature:waiverSignature.value.trim(),waiverAgreed:waiverAgree.checked,waiverVersion:'2026-11-23-draft-1',waiverSignedAt:new Date().toISOString()};
  const b=e.target.querySelector('button[type="submit"]');b.disabled=true;b.textContent='Submitting...';
  alert('This is a test page. No registration has been submitted.');b.disabled=false;b.textContent='Submit registration request';
 });
