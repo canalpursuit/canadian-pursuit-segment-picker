@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Picker contract test harness</title>
+<style>html,body{margin:0;height:100%}iframe{width:100%;height:100%;border:0}</style>
+<script>
+  // Test-only Wix contract simulator. No CMS or automation calls.
+  window.messages = [];
+  window.statuses = { 'NL-1': 'Confirmed' };
+  const review = new URLSearchParams(location.search).has('review');
+  const statusReady = review ? fetch('/data/random-eligible.json').then(response=>{
+    if(!response.ok) throw new Error('Could not load review segments');
+    return response.json();
+  }).then(data=>{
+    for(const id of data.segmentIds) window.statuses[id]='Available';
+  }).catch(()=>{
+    document.getElementById('reviewNotice').textContent='Preview data could not load. Reload to try again.';
+  }) : Promise.resolve();
+  window.reply = message => document.querySelector('iframe').contentWindow.postMessage(message, location.origin);
+  window.addEventListener('message', async event => {
+    if (event.origin !== location.origin || event.source !== document.querySelector('iframe').contentWindow) return;
+    window.messages.push(event.data);
+    if(review && event.data?.type==='CP_REGISTRATION') {
+      for(const id of event.data.segmentIds) if(window.statuses[id]!=='Confirmed') window.statuses[id]='Tentative';
+      window.reply({type:'CP_REGISTRATION_SUCCESS',registrationId:'LOCAL-DEMO-ONLY',status:'Pending'});
+    }
+    if (['CP_PICKER_READY', 'CP_GET_SEGMENT_STATUSES'].includes(event.data?.type)) {
+      await statusReady;
+      window.reply({ type: 'CP_SEGMENT_STATUSES', statuses: window.statuses });
+    }
+  });
+</script>
+<div id="reviewNotice" hidden style="padding:10px;background:#fff3cd;font:14px Arial">Local demo: countryside availability is simulated. No Wix records or emails are created.</div>
+<script>if(review){document.getElementById('reviewNotice').hidden=false;}</script>
+<iframe title="Segment picker" src="/index.html"></iframe>
+</html>

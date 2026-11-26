@@ -1,0 +1,27 @@
+{
+  "name": "canadian-pursuit-segment-picker",
+  "version": "1.0.0",
+  "description": "Segment Data for Canadian Pursuit for Mental Health",
+  "scripts": {
+    "test:smoke": "playwright test",
+    "test:serve": "http-server . -a 127.0.0.1 -p 4173 -c-1",
+    "test:report": "playwright show-report"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/canalpursuit/canadian-pursuit-segment-picker.git"
+  },
+  "keywords": [],
+  "author": "",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/canalpursuit/canadian-pursuit-segment-picker/issues"
+  },
+  "homepage": "https://github.com/canalpursuit/canadian-pursuit-segment-picker#readme",
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "http-server": "14.1.1",
+    "leaflet": "1.9.4"
+  },
+  "private": true
+}
